@@ -18,7 +18,7 @@
 # Assumptions:
 # 'imager' package for R is installed (for grabPoint and grabRect functions)
 # QUT Ecoacoustics Audio 'AnalysisPrograms.exe' file is downloaded and saved in path C:/AP (for 'audio2csv' and 'Audiocutter' functions)
-#	(otherwise user customisation is required at Line 116)
+#	(otherwise user customisation is required at Line 119)
 # Audio files to be analysed are in .WAV, .MP3, .FLAC, .WMA or .OGG format
 # Sound files have unique names with a prefix, and valid start date and time (+UTC offset)
 #    - of the format "PRE_yyyymmmdd_hhmmss+1000.wav"
@@ -26,7 +26,7 @@
 #       e.g. 'PRE_20181201_1900+1000.wav' file has a matching FCS named 'PRE_20181201_1900+1000.png'
 #		(this should be the case if FCS were generated using QUT AP.exe audio2csv function)
 
-# sample rate can be changed at Line 112 (default set to 22050 Hz)
+# sample rate can be changed at Line 115 (default set to 22050 Hz)
 
 #########################
 # Function 1 - select.fcs
@@ -43,11 +43,11 @@ select.fcs <- function(fcs_drive=NULL, audio_drive){
 	if(is.null(fcs_drive)){ 
     	choose.files()
   	} else {
-    	fcs_img1 <- choose.files(default=fcs_drive, multi=FALSE)
+    	fcs_img <- choose.files(default=fcs_drive, multi=FALSE)
   	}
 
-  	# check if fcs_img1 is empty i.e. file has not been chosen
- 	 if(identical(fcs_img1, character(0))) stop("No file selected - action cancelled")
+  	# check if fcs_img is empty i.e. file has not been chosen
+ 	 if(identical(fcs_img, character(0))) stop("No file selected - action cancelled")
 
 	match.wav(fcs_img, audio_drive)
 }
@@ -74,6 +74,9 @@ match.wav <- function(fcs_img, audio_drive){
 
 	# Extract pattern for matching to sound file - removes all characters after the date-time	
 	file_pattern <- gsub(paste0("(.*",start.date.time, ").*$"), "\\1", basename(fcs_img))
+	# add file extention options to search for
+	file_pattern <- paste0(file_pattern, ".*\\.wav|", file_pattern, ".*\\.mp3|", file_pattern, ".*\\.ogg|",
+	                       file_pattern, ".*\\.flac|", file_pattern, ".*\\.wma")
 
 	# convert recording date time to a POSIX object
 	# extract just digits
