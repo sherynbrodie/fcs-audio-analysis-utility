@@ -1,6 +1,6 @@
-# Run functions to open False-colour Spectrogram images and interactively select minutes and open cut audio
-# R code written by Sheryn Brodie, James Cook University, 23/09/2020
+# Run script to open False-colour Spectrogram images and interactively select minutes and open cut audio
 
+# R code written and provided by Sheryn Brodie, 19/08/21
 #  Copyright 2020 Sheryn Brodie
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #   You may not use this file except in compliance with the License.
@@ -12,55 +12,77 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# Requirements:
+# This R code is written for use in RStudio
+# It calls several user-defined functions in the file 'fcs_select_functions.r'
+# The functions allow interactive selection of minutes on False-colour Spectrogram (FCS) images
+# Selected segments of audio are opened in the user's default audio file player
 
-# requires 'imager' package installed
-# requires R file 'fcs_select_functions.r' which has functions: select.fcs, select.min, select.region and cut.audio
-#     also has functions count.mins and calc.diff.time
-# WAV/MP3 sound files and FCS image files need to have matching file names
-# this code written for file names in format: "PRE_YYYYMMDD_hhmmss+1100"
+# Assumptions:
+
+# Accompanying R file 'fcs_select_functions.r' is saved somewhere
+# 'imager' package for R is installed
+# QUT Ecoacoustics 'AnalysisPrograms.exe' file is downloaded and saved in path C:/AP (for 'Audiocutter' function)
+# Audio files to be analysed are in .WAV, .MP3, .FLAC, .WMA or .OGG format
+# Sound files have unique names with a prefix, and valid start date and time (+UTC offset)
+#    - of the format "PRE_yyyymmmdd_hhmmss+1000.wav"
+# Sound files and FCS image files have matching file names,
+#       e.g. 'PRE_20181201_1900+1000.wav' file has a matching FCS named 'PRE_20181201_1900+1000.png'
+#		(this should be the case if FCS were generated using QUT AP.exe audio2csv function)
 
 #-------------------
 # Prelims and Setup
-library(imager) # imager package for grab functions
 
-## USER customisation required:
+# load required library - imager package for grab functions
+library(imager) 
 
-# i) enter path where functions file is located and load functions file
-source("D:/RProjects/FCS_viewer/fcs_select_functions.r")
+## USER customisation required for setting the following file paths:
 
-# ii) set path where sound files are located
-my_audio_drive = "D:/RawAudio"
+# load functions file
+source("C:/R_scripts/fcs_select_functions.r")
 
-# iii) set a file path where cut audio minutes will be temp saved - NOT in my_audio_drive above
+# specify file path where audio files are located
+my_audio_drive = "D:/Recordings"
+
+# set a file path where cut audio minutes will be temp saved - NOT in my_audio_drive above
 output_folder = "D:/Temp/audio_cuts"
 
-# iv) set default drive where to look for false-colour spectrogram images 
-fcs_drive = paste(choose.dir(), "\\*.*", sep="")
-# or specify (*.* for all files in directory)
-fcs_drive = "D:/FCS_ACI-ENT-EVN_HerveyRange/STO_2014*"
+# set default path where to look for false-colour spectrogram images 
+fcs_path = paste(choose.dir(), "\\*.*", sep="")
+
+# OR narrow search to some files (*.* shows all files in directory)
+fcs_path = "D:/Analyses/FCS/Pre_2018*"
+
+#--------------------
+# create/reset log - stores history of selections
+view.log <- data.frame(wav.file=character(), minute.viewed=integer(), length.mins=integer())
+
+# Select FCS image for analysis - outputs a list with working file name values
+files_selected <- select.fcs(fcs_path, my_audio_drive)
+
+# GO TO NEXT FCS in current list
+files_selected <- go.to.next(files_selected$FCS_image, my_audio_drive)
 
 #--------------------
 # Interactive Selection Functions
 
-# Select FCS for analysis - outputs a list with file name values
-night_selected <- select.fcs(my_audio_drive, fcs_drive); mins.selected<-integer()
+# SELECT MINUTE on FCS to cut and play a single minute segment
+view.log <- rbind(view.log, do.call(select.min, files_selected),make.row.names=F)
 
-# SELECT A MINUTE on FCS to cut and play audio
-mins.selected <- select.min(night_selected[[1]], night_selected[[2]], night_selected[[3]])
+# SELECT A REGION on FCS to cut and play several minutes
+view.log <- rbind(view.log, do.call(select.region, files_selected),make.row.names=F)
 
-# select a range of minutes on FCS to cut and play audio
-select.region(night_selected[[1]], night_selected[[2]], night_selected[[3]])
+# Specify minute to cut and open - set start minute and length in minutes
+length.mins = 10
+start.min = 0
+view.log <- rbind(view.log, do.call(cut.audio, c(files_selected, start.min, length.mins)),make.row.names=F)
 
-# Specify Selection directly
-# cut and open audio segment - specify start minute and length in minutes
-length.mins=1
-start.min=60
-cut.audio(night_selected[[2]], night_selected[[3]], start.min, length.mins)
+# calculate duration between two selected time points
+count.mins(files_selected[[1]])
 
-# calculate calling duration from start and end selection
-count.mins(night_selected[[1]])
+#------------------------------
+# For info - view log of selections in date-time order
+view.log[order(view.log$wav.file, view.log$minute.viewed),]
 
-######################
+###
 
 
