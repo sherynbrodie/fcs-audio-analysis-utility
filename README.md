@@ -12,7 +12,9 @@ The R script was intended to be run using R Studio, for repeated calls to the se
 False-colour spectrograms can be generated using the QUT Ecoacoustics Audio Analysis Program:  
 https://github.com/QutEcoacoustics/audio-analysis
 
-[![DOI](https://zenodo.org/badge/376440754.svg)](https://zenodo.org/badge/latestdoi/376440754)  
+
 
 If you use these R files in your work, please attribute by citing:
 Brodie, S. (2021). sherynbrodie/fcs-audio-analysis-utility (Version 21.08.0) [Computer software]. https://doi.org/10.5281/zenodo.5220459
+
+[![DOI](https://zenodo.org/badge/376440754.svg)](https://zenodo.org/badge/latestdoi/376440754)  
